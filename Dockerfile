@@ -1,18 +1,11 @@
-# Base image
-FROM node:12.18.2
-
-RUN mkdir -p /usr/src/app
-
+### STAGE 1: Build ###
+FROM node:12.7-alpine AS build
 WORKDIR /usr/src/app
+COPY package.json package-lock.json ./
+RUN npm install
+COPY . .
+RUN npm run build
 
-# Copying angular folder from local directory to Educative directory
-COPY package.json /usr/src/app
-
-# Installing Angular cli and node modules in angular directory
-RUN npm install -g @angular/cli
-
-COPY . /usr/src/app
-
-EXPOSE 4200/tcp
-
-CMD ["npm", "start"]
+### STAGE 2: Run ###
+FROM nginx:1.17.1-alpine
+COPY --from=build /usr/src/app/dist/helloAngularApp /usr/share/nginx/html
